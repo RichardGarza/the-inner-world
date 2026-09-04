@@ -4,7 +4,7 @@ A browser graphic-novel game built from Chapters One and Two of *The Inner World
 
 You play as Glitch, a journalist in a sealed underground city who feels everything a room hands him and counts everything in it, at the same time, and can't stop doing either.
 
-**Play it:** open `index.html` in any modern browser. No build step, no server, no dependencies beyond web fonts.
+**Play it:** https://richardgarza.github.io/the-inner-world/ or open `index.html` in any modern browser. No build step, no server, no dependencies beyond web fonts.
 
 ## What's in the repo
 
