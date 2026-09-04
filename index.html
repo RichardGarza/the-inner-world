@@ -1,0 +1,518 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Inner World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Spectral:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&family=Caveat:wght@500&display=swap">
+<style>
+:root{
+  --ground:#0a0c0f; --concrete:#1a1e24; --concrete2:#252a31;
+  --amber:#e39a35; --amber2:#f3c26b; --work:#dfe5ea;
+  --slab:#4f93bd; --slab2:#8fc3e6;
+  --paper:#e8e2d3; --paper2:#d6cfbd; --ink:#15171a; --ink2:#4a4d52;
+  --water:#050a10;
+  --feel:0;
+  --display:"Big Shoulders Display","Oswald","Arial Narrow",sans-serif;
+  --body:"Spectral","Georgia","Times New Roman",serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --hand:"Caveat","Bradley Hand","Comic Sans MS",cursive;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--work);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--amber2);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:var(--ground)}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+#vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 60%, rgba(227,154,53,0) 45%, rgba(227,154,53,.55) 100%);
+  opacity:var(--feel);transition:opacity 1.2s ease}
+#flash{position:absolute;inset:0;pointer-events:none;background:#dfe5ea;opacity:0}
+#flash.on{animation:flick .5s steps(2,end) 2}
+@keyframes flick{0%{opacity:0}50%{opacity:.18}100%{opacity:0}}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;gap:12px;pointer-events:none;z-index:5}
+.plate{font-family:var(--display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:#aeb6bf;background:linear-gradient(#2a2f36,#1c2026);border:1px solid #3a4048;padding:7px 12px 6px;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.5)}
+.plate::before,.plate::after{content:"";position:absolute;top:50%;width:5px;height:5px;border-radius:50%;background:#565d66;box-shadow:inset 0 1px 1px rgba(0,0,0,.7);transform:translateY(-50%)}
+.plate::before{left:4px}.plate::after{right:4px}
+.plate.sm{padding-left:16px;padding-right:16px}
+#right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+#tally{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--slab2);background:rgba(5,10,16,.75);border:1px solid rgba(79,147,189,.4);padding:6px 10px;font-variant-numeric:tabular-nums;text-transform:uppercase}
+#tally b{color:#fff;font-weight:500}
+#slab{font-family:var(--mono);font-size:12px;line-height:1.35;color:#cfd9e2;background:#07090c;border:1px solid #2c333b;border-radius:3px;padding:8px 12px;max-width:min(320px,70vw);box-shadow:0 0 0 2px #14181d,0 6px 18px rgba(0,0,0,.6);opacity:0;transform:translateY(-6px);transition:opacity .3s,transform .3s;pointer-events:none}
+#slab .from{color:var(--slab);font-size:10px;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:3px}
+#slab.on{opacity:1;transform:none}
+#slab.buzz{animation:buzz .45s linear}
+#slab.mara{border-color:#5a4a2c}#slab.mara .from{color:var(--amber2)}
+@keyframes buzz{0%,100%{transform:translate(0)}20%{transform:translate(-2px,1px)}40%{transform:translate(2px,-1px)}60%{transform:translate(-2px,0)}80%{transform:translate(2px,1px)}}
+#slab.tick{box-shadow:0 0 0 2px #14181d,0 0 14px rgba(79,147,189,.6)}
+
+/* Caption panel */
+#panel{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(740px,calc(100% - 28px));z-index:6}
+#box{background:var(--paper);color:var(--ink);padding:22px 26px 18px;position:relative;box-shadow:0 0 0 2px var(--ink),8px 8px 0 rgba(0,0,0,.55);max-height:52vh;overflow:auto}
+#box.inner{background:#12151a;color:#d9dee3;box-shadow:0 0 0 2px #2a3038,8px 8px 0 rgba(0,0,0,.55)}
+#box.inner em{color:#f0e6d2}
+#who{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);margin:0 0 8px}
+#box.inner #who{color:#8a93a0}
+#text{font-size:18px;line-height:1.55;margin:0;max-width:64ch;min-height:1.5em}
+#text .ch{opacity:0}
+#text .ch.v{opacity:1}
+#text em{font-style:italic}
+.slabq{font-family:var(--mono);font-size:.82em;letter-spacing:.06em;background:#0d1116;color:#cfd9e2;padding:1px 6px;white-space:nowrap}
+.plateq{font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:.95em;background:#2a2f36;color:#cfd5dc;padding:1px 7px;border:1px solid #454c55}
+.n{font-weight:500;cursor:pointer;border-bottom:2px dotted var(--slab);padding-bottom:1px;transition:color .2s,border-color .2s;position:relative}
+.n:hover{color:#1f5f88}
+.n.got{border-bottom-style:solid;color:#1f5f88;cursor:default}
+#box.inner .n{color:#cfe4f3;border-color:var(--slab2)}
+#box.inner .n.got{color:var(--slab2)}
+.pending,.pending.n,.pending.plateq,.pending.slabq{background:transparent!important;border-color:transparent!important;color:transparent!important;transition:none}
+.n .pop{position:absolute;left:50%;top:-4px;transform:translate(-50%,0);font-family:var(--mono);font-size:11px;color:var(--slab);animation:pop .9s ease-out forwards;pointer-events:none;white-space:nowrap}
+@keyframes pop{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-22px)}}
+#hint{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--slab);margin:12px 0 0;opacity:0;transition:opacity .4s}
+#hint.on{opacity:1}
+#choices{display:flex;flex-direction:column;gap:8px;margin:16px 0 4px}
+#choices:empty{display:none}
+.choice{text-align:left;font-family:var(--body);font-size:16px;line-height:1.35;padding:10px 14px 10px 40px;background:var(--paper2);border:1.5px solid var(--ink);position:relative;color:var(--ink);transition:background .15s,transform .15s}
+.choice::before{content:attr(data-k);position:absolute;left:12px;top:9px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.choice:hover{background:#efe9da;transform:translateX(2px)}
+.choice.c::after,.choice.f::after{content:"";position:absolute;right:10px;top:50%;width:8px;height:8px;transform:translateY(-50%)}
+.choice.c::after{background:var(--slab)}
+.choice.f::after{background:var(--amber);border-radius:50%}
+#next{position:absolute;right:14px;bottom:10px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);opacity:0;transition:opacity .3s}
+#next.on{opacity:1;animation:nudge 1.6s ease-in-out infinite}
+#box.inner #next{color:#8a93a0}
+@keyframes nudge{50%{transform:translateX(3px)}}
+
+/* Sheet of paper */
+#sheet{position:absolute;left:50%;top:50%;transform:translate(-50%,-56%) rotate(-1.2deg);width:min(420px,88vw);background:#efe9dc;color:#2b2a28;padding:34px 30px 40px;box-shadow:0 20px 50px rgba(0,0,0,.7),0 0 0 1px rgba(0,0,0,.4);font-family:var(--hand);font-size:24px;line-height:1.35;z-index:4;opacity:0;transition:opacity .8s;pointer-events:none;
+  background-image:repeating-linear-gradient(transparent 0 31px, rgba(60,50,40,.08) 31px 32px)}
+#sheet.on{opacity:1}
+#sheet p{margin:0 0 6px}
+#sheet .shape{margin-top:18px;font-size:21px;color:#4a4540}
+#sheet .tal{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#6a655e;margin-top:16px;line-height:1.6}
+
+/* Cards and title */
+.card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:rgba(6,8,10,.86);z-index:8;opacity:0;pointer-events:none;transition:opacity .6s;padding:24px;text-align:center}
+.card.on{opacity:1;pointer-events:auto}
+.bigplate{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:.06em;font-size:clamp(44px,9vw,96px);line-height:.95;color:#d5dbe1;background:linear-gradient(#2c3138,#1a1e24);border:2px solid #444b54;padding:22px 44px 16px;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 40px rgba(0,0,0,.7);text-wrap:balance;max-width:min(92vw,900px)}
+.bigplate::before,.bigplate::after,.bigplate i::before,.bigplate i::after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:#5d656f;box-shadow:inset 0 2px 2px rgba(0,0,0,.7)}
+.bigplate::before{left:8px;top:8px}.bigplate::after{right:8px;top:8px}
+.bigplate i::before{left:8px;bottom:8px}.bigplate i::after{right:8px;bottom:8px}
+.bigplate i{position:absolute;inset:0;pointer-events:none}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber2)}
+.sub{font-family:var(--body);font-style:italic;font-size:19px;color:#aeb6bf;max-width:52ch}
+.btnrow{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.btn{font-family:var(--display);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:16px;color:#e9c17a;border:1.5px solid var(--amber);padding:12px 26px 10px;transition:background .15s,color .15s}
+.btn:hover{background:var(--amber);color:#1a120a}
+.btn.ghost{color:#aeb6bf;border-color:#4a525b}
+.btn.ghost:hover{background:#2a3038;color:#fff}
+#occ{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:#8a93a0;text-transform:uppercase;font-variant-numeric:tabular-nums}
+#occ b{color:var(--work);font-weight:500}
+.meters{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;align-items:center;width:min(420px,86vw);font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#aeb6bf;text-align:left}
+.bar{height:10px;background:#1c2026;border:1px solid #3a4048;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--amber)}
+.digits{font-family:var(--mono);font-size:22px;color:var(--slab2);font-variant-numeric:tabular-nums;letter-spacing:.1em}
+.foot{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6a727b;margin-top:10px}
+
+@media (max-width:640px){
+  #text{font-size:16.5px}
+  #box{padding:16px 16px 14px;max-height:56vh}
+  #panel{bottom:10px}
+  .choice{font-size:15px}
+  #hud{padding:10px}
+  .plate{font-size:11px;padding:6px 10px 5px}
+  #slab{max-width:62vw;font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  #next.on,#slab.buzz,#flash.on{animation:none}
+  .n .pop{animation:none;opacity:0}
+}
+</style>
+
+<div id="stage" aria-live="polite">
+  <canvas id="scene"></canvas>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+
+  <div id="hud">
+    <div class="plate sm" id="where">Sublevel Nine</div>
+    <div id="right">
+      <div id="tally">Counted <b>0000</b></div>
+      <div id="slab"><span class="from">Editor</span><span class="msg"></span></div>
+    </div>
+  </div>
+
+  <div id="sheet"></div>
+
+  <div id="panel">
+    <div id="box" role="button" tabindex="0" aria-label="Advance">
+      <p id="who"></p>
+      <p id="text"></p>
+      <p id="hint">Tap a figure to count it</p>
+      <div id="choices"></div>
+      <div id="next">Next ▸</div>
+    </div>
+  </div>
+
+  <div class="card on" id="title">
+    <div class="kicker">A graphic novel · Chapters One and Two</div>
+    <div class="bigplate">The Inner World<i></i></div>
+    <div id="occ">Maximum occupancy 20 · <b>31</b> aboard</div>
+    <div class="sub">Every figure in the text can be counted. Every choice tilts the day toward feeling or toward arithmetic. Neither cancels the other.</div>
+    <div class="btnrow">
+      <button class="btn" id="begin">Begin</button>
+      <button class="btn ghost" id="cont" hidden>Continue</button>
+    </div>
+  </div>
+
+  <div class="card" id="chapter">
+    <div class="kicker" id="ck"></div>
+    <div class="bigplate" id="ct"><i></i></div>
+    <div class="sub" id="cs"></div>
+    <div class="btnrow"><button class="btn" id="cgo">Go down</button></div>
+  </div>
+
+  <div class="card" id="end">
+    <div class="kicker">End of Chapter Two</div>
+    <div class="bigplate">Then I started counting<i></i></div>
+    <div class="meters">
+      <span>Counted</span><span class="digits" id="ecount">0000</span>
+      <span>Felt</span><span class="bar"><i id="efeel"></i></span>
+    </div>
+    <div class="sub" id="esub"></div>
+    <div class="btnrow">
+      <button class="btn" id="again">Read again</button>
+    </div>
+    <div class="foot">Chapter Three is not yet written</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const n=(txt,v)=>`<b class="n" data-v="${v}">${txt}</b>`;
+
+/* ---------- The script ---------- */
+const beats=[
+{card:{k:'Chapter One',t:'Sublevel Nine',s:'The elevator has a plate riveted beside the door.'},scene:'elevator',where:'Sublevel Nine'},
+{scene:'elevator',t:`The elevator down to Sublevel Nine has a plate riveted beside the door: <span class="plateq">MAXIMUM OCCUPANCY ${n('20',20)}</span>. There were ${n('thirty-one',31)} of us in it that morning. Nobody said anything. Down here the numbers only matter when someone official is watching, and officials don’t ride down to Nine.`,
+ choice:[{l:'Notice the count.',c:1,go:'e1'},{l:'Look at the floor.',f:1,go:'e2'}]},
+{id:'e1',t:`I noticed the count anyway. I always notice the count. I can’t help but notice.`,next:'bay1'},
+{id:'e2',t:`I looked at the floor. Thirty-one pairs of boots. I noticed the count anyway. I always notice the count. I can’t help but notice.`},
+{id:'bay1',scene:'bay',t:`The aid center was set up in an old freight bay, left over from when the city still moved cargo — before there was nothing left to move. The ceiling lights flickered between amber and cold white, and nobody had filed a maintenance request, because nobody bothers over faulty lights anymore. The line of people waiting folded back on itself ${n('four times',4)} under the low arches: ration cards, empty containers, aid workers in worn jumpsuits moving along it. And under it all, the sound you stop hearing by ${n('age six',6)} if you’re born down here — the ventilation fans, and deeper, the long metallic clank of the core systems. The city’s heart, turning over.`},
+{t:`The air smelled like damp concrete. It always smells like that. Nothing down here is new — least of all the air, which has been cycling through the same filters since before anyone breathing it was born.`},
+{t:`My byline reads like a real name. No one has ever called me that. I’ve been called Glitch as long as I can remember. My mother said it started at the birthing center — one of the facilitators glanced at the readout, muttered “weird, there must have been a glitch,” and it never came off. Nobody ever told me what the machine saw. Down here, a name like that sticks harder than anything they print.`},
+{t:`I grew up ${n('six levels',6)} above this bay, in a sector where every corridor mural said some version of <span class="plateq">IF THEY KNEW, THEY WOULD CARE</span>. When I tested into journalism track, the whole housing block signed a card. They weren’t sending me off to report the news. They were sending me to make people care. It took me ${n('six years',6)} to learn those are two different jobs. And it wasn’t until one morning, June 18th — one interview, one walk home — that I fully understood. That was the day everything changed.`},
+{t:`Lena ran intake. She’d been running it, as far as I could tell, on ${n('four hours',4)} of sleep and the conviction that sleep was a moral failing. She talked to me the way she moved down the line — fast, warm, already reaching for the next thing — and for the first ${n('twenty minutes',20)} I mostly let my recorder — a palm-sized slab of municipal glass — do the work. It sat on the crate between us with its dull blue glow, auto-transcribing to the paper’s intranet, turning her into text somewhere upstairs while she was still just a voice down here.`},
+{who:'Lena',t:`“${n('Four hundred',400)} new intake requests this cycle,” she said. “Four hundred. And Allocation wants distributions held flat. You know what flat means in this room? Flat means I choose. Flat means I stand at that desk and decide which of these people gets to be a person this cycle.”`,
+ choice:[{l:'“The unassigned rolls grew again. If distributions expand, where does it come from?”',c:2,go:'lq1'},{l:'“Four hundred. How do you choose?”',f:2,go:'lq2'}]},
+{id:'lq1',who:'Glitch',t:`“The unassigned rolls grew again,” I said. “If distributions expand, where does it come from? Reclamation’s already running deficit quotas, and the battery sectors—”`},
+{who:'Lena',t:`“You sound just like them.” She didn’t say it angry. She said it disappointed, which is worse. “I had you figured for one of the good ones.”`,next:'desk'},
+{id:'lq2',who:'Lena',t:`“You don’t,” she said. “You stand there and it chooses you. Then you carry it home.” She looked at me one beat too long. “I had you figured for one of the good ones.”`},
+{id:'desk',t:`At the desk, a woman held a water canister with both hands while her kid — ${n('four, maybe five',5)} — turned a ration card around and around in his fingers like a toy, because it was the closest thing he had to one. The intake worker scanned the card. Shook her head. Scanned it again. Handed it back with a face that had run out of sympathy years ago. The woman didn’t argue. She just adjusted her grip on the canister and walked away, like the argument would have cost calories she simply couldn’t spare.`},
+{who:'Lena',t:`Lena watched me watch them.<br><br>“When you write this up, put your readers in this room,” she said. “Not reading about it — standing in it. Make them feel this line. Make them see what’s happening down here. If we don’t open the floodgates wider, we’re the ones drowning them. Feelings first — the numbers can wait.”`},
+{fx:'flicker',c:2,f:2,t:`And there it was — the thing that happens to me, the thing I’ve never had language for. The room hit me the way she wanted it to: the kid, the card, the mother’s careful hands, four hundred new requests, <em>choose</em>. It landed in my chest with its full weight. And in the same second — not after, not instead, in the same second — the other thing woke up behind my eyes: recyclers past their rated load of ${n('nineteen minutes',19)} of every hour, reclamation at deficit, quotas trimmed ${n('twice',2)} this year, battery allotments bled out liter by liter, amp by amp — the whole city doing its arithmetic in me at once. Two things that cannot both be everything, being everything at once. Pressure built behind my eyes and the overhead panels flickered — or my vision did. Down here you can’t always tell which.`},
+{ping:['STOP COUNTING. START FEELING. LAST WARNING.'],t:`The messenger slate strapped to my wrist buzzed. My editor: <span class="slabq">STOP COUNTING. START FEELING. LAST WARNING.</span><br><br>I hadn’t filed a word yet. The slab transcribes as it listens; upstairs they read as I breathe.`},
+{ping:['THE MOTHER. THE KID. YOU SAW A KID, RIGHT?','YOU’RE WRITING LIKE A LOGICAL. FIX IT.'],t:`It buzzed again: <span class="slabq">THE MOTHER. THE KID. YOU SAW A KID, RIGHT?</span> Then one more: <span class="slabq">YOU’RE WRITING LIKE A LOGICAL. FIX IT.</span><br><br>Down here, Logical is the worst thing you can call someone. My editor threw it like an insult and never knew it was a diagnosis.`},
+{mara:'Heard they put you on Nine. Grim. I’m holding half a ration bar with your name on it if you’re back before third shift. Don’t argue with anyone.',t:`A minute later the slate buzzed again. A different sender this time — Mara: <span class="slabq">Heard they put you on Nine. Grim. I’m holding half a ration bar with your name on it if you’re back before third shift. Don’t argue with anyone.</span><br><br>We came up through the same housing block, Mara and I, and she is the only person I know who can tell me not to argue with anyone and mean it kindly.`},
+{t:`I stayed another hour. I asked Lena the soft questions my editor wanted and she answered them beautifully, because they were the questions she wanted too.`,
+ choice:[{l:'Ask the hard one.',c:2,go:'hard1',set:'hard'},{l:'Leave it in your throat.',f:1,go:'hard2'}]},
+{id:'hard1',t:`I asked one hard one — whether opening the floodgates wider without new supply just changes who drowns — and she looked at me like I’d spat on the floor of her church. The line shuffled forward. The fans kept humming. Far below, the city’s heart clanked over, indifferent to us both.`,next:'route'},
+{id:'hard2',t:`I didn’t ask the hard one — whether opening the floodgates wider without new supply just changes who drowns. It sat in my throat the rest of the hour, and I’d swear Lena could see it there. The line shuffled forward. The fans kept humming. Far below, the city’s heart clanked over, indifferent to us both.`},
+{id:'route',t:`Two ways home from Nine. The concourse is faster, but the concourse is full of screens, and the screens are full of people who are certain.`,
+ choice:[{l:'Take the maintenance corridors.',go:'corr1',set:'corridors'},{l:'Take the concourse.',go:'conc0',f:1,set:'concourse'}]},
+{id:'corr1',scene:'corridor',where:'Maintenance · Nine',t:`I took the maintenance corridors home. I always do when I leave Nine. I didn’t have the stomach for certainty yet.`,next:'corr2'},
+{id:'conc0',scene:'concourse',where:'Concourse',t:`I took the concourse. Eleven steps in, a screen told me to open my heart and a stranger’s shoulder told me to move, and I turned around and went back down to the stairwell. I didn’t have the stomach for certainty yet.`},
+{id:'corr2',scene:'corridor',where:'Maintenance · Nine',t:`The corridors on Nine are the city with its skin off: bare conduit, valve wheels, strip lighting in emergency amber running along the floor seam. Pump Station Six thudding somewhere behind the wall like a slow pulse. My footsteps and the fans and nothing else.`},
+{t:`Lena’s voice kept walking with me. <em>Feelings first — the numbers can wait.</em> And behind it, uninvited, the voice of a reclamation tech I interviewed ${n('two months',2)} ago, a woman with chemical burns up both forearms, who’d said: <em>every extra liter I send up is a liter I bled for, and they hand it to people who’ve never touched a filter line.</em> My editor cut her from that story. Wrong feeling. Wrong direction.`},
+{t:`Somewhere between Pump Station Six and the east stairwell, the thoughts stopped being theirs and became mine.`},
+{inner:true,c:2,f:2,t:`<em>The city is running out of resources. There are so many people in need, but it seems like the more we give, the less we have to give. The people in charge always say they’re on our side, but sometimes I really wonder if they care at all. They take all they can from people like me, who are just trying to make a difference and have enough to live — all the while passing it out to those that don’t do anything at all. I know these people need help, but I’m struggling too. I feel like I’m being dragged deep under water, not sure how I’ll meet my fate — whether the lack of oxygen will take me or I’ll be crushed by the pressure before it has the chance.</em>`},
+{t:`I stopped walking.`},
+{t:`I have carried feelings that weren’t mine out of ${n('a hundred',100)} interviews. That’s the job: you hold them, you write them down, you hand them to strangers and hope. But this wasn’t Lena’s feeling, and it wasn’t the tech’s with her burned arms, and it wasn’t the mother’s with her careful hands. It was all of them at once, and it did not contradict itself. That’s what stopped me. Everyone I have ever recorded is certain the other side can’t feel or won’t think. And standing there in the amber dark I could feel it all and think it all, together, and the two didn’t cancel out. They just hurt.`},
+{scene:'water',where:'Past Pump Station Six',t:`There’s a stretch past the pump station where a cracked overhead pipe has been dripping condensation for as long as I’ve been taking that route — down into a shallow drainage channel cut in the floor. Mineral scale rings its edges, one pale ring for every year nobody came. The maintenance request has been pending for ${n('six years',6)}. I know because I filed it.`},
+{t:`The channel holds a thin, still sheet of water, and the water holds the strip lighting, and that night it held me — the amber outline of a man, breaking apart each time a drop fell, never coming back quite the same.`},
+{t:`I crouched at the edge of it. The recorder was still glowing in my pocket.`,
+ choice:[{l:'Turn it off.',f:1,go:'rec1',set:'recoff'},{l:'Leave it running.',c:1,go:'rec2'}]},
+{id:'rec1',t:`I turned the recorder off for the first time all day and pocketed it. Upstairs the transcript would end mid-hum, and tomorrow my editor would ask where the rest of me went, and I didn’t have an answer — or well, I actually did have one, but I knew there was no place for it in the paper.`,next:'drop'},
+{id:'rec2',t:`I left it running. Upstairs the transcript would read: <span class="slabq">drip. breath. drip.</span> Tomorrow my editor would ask what the rest of that was, and I didn’t have an answer — or well, I actually did have one, but I knew there was no place for it in the paper.`},
+{id:'drop',t:`The drop fell. The reflection broke. Came back together, a little wrong.`},
+{inner:true,t:`<em>How can they not see what’s happening?</em>`},
+
+{card:{k:'Chapter Two',t:'The Concourse',s:'The lights in our block come up slow.'},scene:'block',where:'Housing block',resetT:true},
+{scene:'block',t:`The lights in our block come up slow — dim amber to work-white over ${n('twenty minutes',20)}, a municipal imitation of a sunrise nobody down here has ever seen. Mara knocked before they finished warming. She never waits for the white.`},
+{flag:'mara',who:'Mara',t:`She stood in the doorway with a ration bar in each hand, turning one over like it was evidence — a gray block of pressed calories, dense as regret, with a flavor the city never budgeted for.<br><br>“You didn’t eat the one I left.”`,
+ choice:[{l:'“I ate.”',go:'m1'},{l:'Tell her about the water.',f:1,go:'m2',set:'almost'}]},
+{id:'m1',who:'Glitch',t:`“I ate.”`,next:'m3'},
+{id:'m2',t:`I opened my mouth to tell her about the water. What came out was: “I ate.”`},
+{id:'m3',who:'Mara',t:`“You logged a skipped meal. The block board posts them.” She stepped past me and set both bars on the table that is also my desk, which is also most of my room. “${n('Two more flags',2)} and they put you on a counselor list, and then I have to go vouch for you. I hate vouching. I’m a terrible liar.”`},
+{t:`She is an excellent liar. I once watched her talk a hall monitor out of a noise citation so thoroughly that he apologized to her for the hallway. But this was Mara’s way of saying she’d noticed something, and noticing is what she does instead of asking.`},
+{t:`“Late night,” I said. “The Nine piece.”<br><br>“That bad?”<br><br>“That bad.”`},
+{t:`She looked at me one second longer than the conversation needed. ${n('Six years',6)} across the corridor and she keeps a catalogue of my faces, and whatever she found in this one, she decided not to name it. That’s the other thing she does instead of asking. “Eat both bars,” she said, on her way out. “You look like a maintenance shaft.”`},
+{flag:'maragone',t:`I ate both bars. I didn’t taste either one. Somewhere under the floor the city’s heart turned over, moving water I couldn’t stop thinking about.`},
+{scene:'concourse',where:'Main concourse',t:`The walk to the paper runs through the main concourse — ${n('four levels',4)} of foot traffic stacked around a shaft of maintenance lighting that someone, generations ago, decided to call daylight. The screens were already going when I came up the stairs.`},
+{t:`They run a loop. I know the loop. ${n('Forty-one',41)} panels, ${n('eleven',11)} messages, repeating every ${n('four minutes',4)} and change. I never tried to learn that; it’s just there, the way the vent-hum is there. Numbers stick to me like the smell of the recyclers sticks to everyone else.`},
+{t:`Most of it was the usual. <span class="plateq">OPEN HEARTS, OPEN HANDS</span> over slow footage of an aid line. A child splitting a ration bar with a smaller child, shot warm and close. <span class="plateq">FEEL FIRST. THE REST FOLLOWS.</span>`},
+{flag:'p6',t:`Halfway through the rotation, panel six stuttered. Half a second of the wrong feed entirely — a gray grid of figures, columns and totals marching down the screen, <span class="slabq">EFFICIENCY IS CARE</span> printed flat along the bottom in a typeface nobody uses down here. Logical messaging, built for people who are moved by arithmetic, bleeding into a concourse engineered for people who aren’t. Then the child was back, mid-smile, and not one person around me had looked up. Screens glitch. The system has seams, and things slip through them sometimes. You learn that early when one of the things that slipped through is you.`},
+{flag:'p19',t:`Then panel nineteen, which should have been the child again, wasn’t. Dark water, edge to edge, moving gently, deep enough that the light died in it. White text across the middle: <span class="slabq">HEAVY, ISN’T IT. LET THE CITY CARRY IT.</span>`},
+{t:`Then it was the child again, and the loop went on as if nothing had happened.`,
+ choice:[{l:'Wait through the full rotation. Twice.',c:2,go:'w1',set:'waited'},{l:'Keep walking.',f:1,go:'w2'}]},
+{id:'w1',flag:'p6off',t:`I stood there while the crowd broke around me like I was part of the architecture. Eleven messages. I had never seen a twelfth. I waited through the full rotation, twice, ${n('nine minutes',9)} with my neck bent back like a tourist, and neither stray came around again.`,next:'con7'},
+{id:'w2',flag:'p6off',t:`I kept walking. I made it as far as the stairs. Then I was standing there again while the crowd broke around me like I was part of the architecture. Eleven messages. I had never seen a twelfth. I waited through the full rotation, twice, ${n('nine minutes',9)} with my neck bent back like a tourist, and neither stray came around again.`},
+{id:'con7',t:`Panel six I could file away. Crossfeed — the wrong audience’s ad in the wrong room, a seam showing, the kind of thing you’d expect a city run on old code to do now and then. Panel six should have bothered me more than it did.`},
+{f:2,t:`Panel nineteen was not the wrong audience’s ad. The wellness bureau runs thousands of them, and I couldn’t have explained to anyone why my chest was hammering — except that the night before I had stood over black water and thought about drowning in a way I had been very careful to keep off the record, and this morning a screen picked me out of four levels of foot traffic and told me to set it down.`},
+{t:`A seam is an accident. This had aim. It knew. It had no way of knowing, and it knew.<br><br>I didn’t write that down either. Not yet.`},
+{scene:'newsroom',where:'The paper',t:`Corrin was at her desk when I came in, which is the only place I have ever seen her, as if the paper had been printed around her. Fifty-something, sleeves permanently pushed up, a face that reads everything twice. She’s been on the floor longer than the masthead above it, and she runs the place the way the vents run air — constantly, invisibly, without ever being thanked for it.`},
+{who:'Corrin',t:`“You saw my pings,” she said. Not an apology. Inventory.<br><br>“I see everything you send me, Corrin.”`},
+{who:'Corrin',t:`“Good. Then you already know what the Nine piece is.” She turned her screen toward me: yesterday’s intake footage, freeze-framed on the woman with the folded card. “It’s her. She’s the whole story. Her hands, her kid, her silent resignation when they scanned her card the second time.”`,
+ choice:[{l:'“And the line itself? Why it’s longer every cycle?”',c:2,go:'cq1',set:'askedline'},{l:'Nod. Let her have the mother.',f:1,go:'cq2'}]},
+{id:'cq1',who:'Corrin',t:`“Background. One graf, up high, so nobody chokes on it.” A graf is one paragraph. The math would get one paragraph — high enough to look honest, short enough to forget. She caught the look on my face before I’d decided to have one. “Don’t. Heart is what moves a ration vote. Nobody ever marched over arithmetic.”`,next:'news4'},
+{id:'cq2',who:'Corrin',t:`I nodded. She caught the look on my face anyway, before I’d decided to have one. “Don’t. Heart is what moves a ration vote. Nobody ever marched over arithmetic.”`},
+{id:'news4',t:`For a second something older crossed her face — the reporter she must have been once, ${n('twenty years',20)} and one armor upgrade ago, and I’d swear she almost asked me what the real story was. It passed. “File by third bell,” she said, and turned the screen back around.`},
+{t:`I filed by third bell. I gave her the mother, the kid, the second scan, Lena’s floodgates line landing at the end like a fist on a table. It was good. That’s the part I don’t like telling: the feelings-first version was true, and it was moving, and I felt it move through me while I wrote it. Both things were happening at once, the way they always are with me. I felt the woman’s hands. I counted the line she stood in. Nobody prints the second thing.`},
+{t:`The piece needed one number for the background graf, so I pulled the distribution tables. That should have been thirty seconds. Intake at Nine: up ${n('four percent',4)}, ${n('third cycle',3)} running. Distributions: ${n('flat to the decimal',0)}. And at the bottom of the sheet, in the smallest type the intranet allows, reclamation output had been <em>adjusted for seasonal recalibration</em>.`},
+{t:`We live in a sealed city. There are no seasons.`},
+{t:`I sat with that for a while. More people asking. The same amount given out. And somewhere between the recyclers and the ration windows, output “adjusted” — a word that sounds like weather and behaves like a hand on a valve. The math didn’t reconcile, and when I flagged the cell, the system offered me a wellness link.`},
+{scene:'archive',where:'The archive',t:`Every paper keeps its dead. Ours are bound in print flats in the archive — a locked sub-room off the print floor where every edition ever printed goes to be forgotten. Officially I went down for context on the last recalibration. Officially, that’s still why I went.`},
+{t:`It was ${n('nine years',9)} ago, the last one. Same word, same small type. And in the flat for that cycle there was a column — back when the paper still ran one — asking where the output went. Plain questions, the kind I’d been fired-in-advance from ever writing. Somebody had loved those questions once.`},
+{t:`The byline was gone. Not cropped, not faded. Inked out by hand, a black bar pressed hard enough to shine, old enough to crack. I checked the duplicate flat, and the reserve flat, and the bound reader copy. ${n('All four',4)}. Same bar, same hand, every copy in the building.`},
+{t:`You don’t do that to a nobody. You do that to make somebody into one.`,
+ choice:[{l:'Photograph it.',go:'ph1',set:'reached'},{l:'Memorize it.',c:2,go:'ph2'}]},
+{id:'ph1',t:`I had the slab halfway out of my pocket before I remembered what it was. It transcribes as it listens, and upstairs reads as I breathe. I put it back. For the first time in my life that felt less like a fact about my equipment and more like a fact about my city. I stood in the archive a long time, listening to the presses through the wall, and I memorized the flat number, the cycle, the page.`,next:'paper1'},
+{id:'ph2',t:`I stood in the archive a long time, listening to the presses through the wall, and I memorized the flat number, the cycle, the page. I didn’t photograph it. The slab in my pocket transcribes as it listens, and upstairs reads as I breathe, and for the first time in my life that felt less like a fact about my equipment and more like a fact about my city.`},
+{id:'paper1',scene:'paper',where:'Housing block · night',t:`I own ${n('nine sheets',9)} of actual paper. They cost me a full day’s rations in a stairwell trade ${n('two years',2)} ago, and I couldn’t have told you then why I wanted them. Paper is what you buy when you want to remember something without the city remembering it with you.`},
+{sheet:true,t:`That night I laid the first sheet on the table that is also my desk, and I wrote, by hand, small.`},
+{sheet:true,ping:['STOP COUNTING. START FEELING. LAST WARNING.'],t:`Under it, one line to hold the shape of the day, in case they ever taught the slab to read the inside of my head too. Corrin’s ping was still sitting in the wrist-slate where I’d dropped it on the corner of the table, patient as a sign: <span class="slabq">STOP COUNTING. START FEELING. LAST WARNING.</span>`},
+{sheet:true,t:`I looked at it for a while.`},
+{sheet:true,t:`Then I started counting.`,end:true}
+];
+const idx={};beats.forEach((b,i)=>{if(b.id)idx[b.id]=i;});
+
+/* ---------- State ---------- */
+const SAVE='innerworld.save.v1';
+let st={i:0,count:0,feel:0,tally:[],flags:{},scene:'elevator',sf:{},hint:false};
+function save(){try{localStorage.setItem(SAVE,JSON.stringify(st));}catch(e){}}
+function load(){try{const s=localStorage.getItem(SAVE);return s?JSON.parse(s):null;}catch(e){return null;}}
+
+/* ---------- Canvas scenes ---------- */
+const cv=$('#scene'),ctx=cv.getContext('2d');
+let W=0,H=0,dpr=1,t0=performance.now(),sceneT0=t0;
+function resize(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',resize);resize();
+const grain=document.createElement('canvas');grain.width=grain.height=160;{const g=grain.getContext('2d'),im=g.createImageData(160,160);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=28;}g.putImageData(im,0,0);}
+const hash=x=>{const s=Math.sin(x*127.1+311.7)*43758.5453;return s-Math.floor(s);};
+const A='#e39a35',WH='#dfe5ea',SB='#4f93bd';
+function fig(x,y,h,a){ctx.fillStyle=`rgba(6,8,11,${a==null?1:a})`;ctx.beginPath();ctx.arc(x,y-h*.86,h*.1,0,7);ctx.fill();rr(x-h*.15,y-h*.74,h*.3,h*.74,h*.06);ctx.fill();}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function glow(x,y,r,col,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col.replace('A)',a+')'));g.addColorStop(1,col.replace('A)','0)'));ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);}
+const AM='rgba(227,154,53,A)',WT='rgba(223,229,234,A)',BL='rgba(79,147,189,A)';
+function ground(top,bot){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,top);g.addColorStop(1,bot);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+function platetext(x,y,w,h,lines){ctx.fillStyle='#262b32';ctx.fillRect(x,y,w,h);ctx.strokeStyle='#4a515a';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1);ctx.fillStyle='#b3bac2';ctx.font=`700 ${Math.max(10,h*.28)}px "Big Shoulders Display",sans-serif`;ctx.textAlign='center';lines.forEach((l,i)=>ctx.fillText(l,x+w/2,y+h*(.42+i*.36)));ctx.textAlign='left';[[x+6,y+6],[x+w-6,y+6],[x+6,y+h-6],[x+w-6,y+h-6]].forEach(p=>{ctx.fillStyle='#5b636c';ctx.beginPath();ctx.arc(p[0],p[1],2.2,0,7);ctx.fill();});}
+
+const scenes={
+elevator(t){
+  ground('#171b20','#090b0e');
+  ctx.strokeStyle='rgba(255,255,255,.045)';ctx.lineWidth=1;for(let x=0;x<W;x+=34){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  const fl=hash(Math.floor(t*6))>.86?.35:1;
+  ctx.fillStyle=`rgba(223,229,234,${.6*fl})`;ctx.fillRect(W*.18,H*.07,W*.64,5);glow(W/2,H*.09,H*.5,WT,.14*fl);
+  platetext(W*.66,H*.26,Math.min(230,W*.28),Math.min(74,W*.09),['MAXIMUM','OCCUPANCY 20']);
+  for(let row=2;row>=0;row--){for(let i=0;i<31;i++){if(i%3!==row)continue;const x=W*(.06+((i*7)%29)/29*.88)+hash(i)*W*.02;const y=H*(1.02-row*.07);const h=H*(.36-row*.04)*(0.9+hash(i+9)*.2);fig(x,y,h,1-row*.18);}}
+},
+bay(t){
+  ground('#101317','#07090b');
+  for(let d=3;d>=0;d--){ctx.strokeStyle=`rgba(200,210,220,${.05+d*.01})`;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(W/2,H*.58,W*(.62-d*.11),H*(.5-d*.09),0,Math.PI,Math.PI*2);ctx.stroke();}
+  for(let i=0;i<6;i++){const x=W*(.1+i*.16),y=H*.17;const warm=hash(Math.floor(t*.7)+i*13)>.5;const dim=hash(Math.floor(t*9)+i)>.92?.3:1;glow(x,y,H*.32,warm?AM:WT,.22*dim);ctx.fillStyle=warm?A:WH;ctx.globalAlpha=.9*dim;ctx.fillRect(x-18,y-2,36,4);ctx.globalAlpha=1;}
+  const rows=[[.5,.16,13],[.6,.2,13],[.72,.25,12],[.87,.32,11]];
+  rows.forEach((r,ri)=>{const y=H*r[0],h=H*r[1];for(let i=0;i<r[2];i++){const x=W*(.05+i/(r[2]-1)*.9)+Math.sin(t*.4+i+ri)*1.5;fig(x,y,h*(.9+hash(i*3+ri)*.2),.85+ri*.05);}});
+  ctx.fillStyle='#23282f';ctx.fillRect(W*.06,H*.8,W*.13,H*.1);ctx.fillStyle='#1a1e24';ctx.fillRect(W*.06,H*.8,W*.13,4);
+  glow(W*.125,H*.8,H*.09,BL,.5+.1*Math.sin(t*2));ctx.fillStyle=SB;ctx.fillRect(W*.11,H*.79,W*.03,5);
+},
+corridor(t,dim){
+  ground('#0b0d10','#050607');const vx=W*.5,vy=H*.42;
+  ctx.fillStyle='#111418';ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(W,H);ctx.lineTo(vx,vy);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#0e1114';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(vx,vy);ctx.lineTo(0,H);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(vx,vy);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=2;for(let k=0;k<5;k++){ctx.beginPath();ctx.moveTo(0,H*.1+k*H*.05);ctx.lineTo(vx,vy);ctx.moveTo(W,H*.1+k*H*.05);ctx.lineTo(vx,vy);ctx.stroke();}
+  const pa=(dim?.45:.9)*(.9+.1*Math.sin(t*1.3));ctx.strokeStyle=`rgba(227,154,53,${pa})`;ctx.lineWidth=3;ctx.shadowColor=A;ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(W*.22,H);ctx.lineTo(vx,vy);ctx.moveTo(W*.78,H);ctx.lineTo(vx,vy);ctx.stroke();ctx.shadowBlur=0;
+  glow(W*.1,H*.5,H*.35,AM,.08+.07*Math.sin(t*1.3));
+  ctx.strokeStyle='#3a414a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(W*.14,H*.5,H*.06,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(W*.14-H*.06,H*.5);ctx.lineTo(W*.14+H*.06,H*.5);ctx.moveTo(W*.14,H*.44);ctx.lineTo(W*.14,H*.56);ctx.stroke();
+  glow(vx,vy,H*.25,AM,dim?.05:.12);
+},
+water(t){
+  scenes.corridor(t,true);
+  ctx.fillStyle='#2b3138';ctx.fillRect(0,H*.16,W,10);ctx.fillStyle='#0a0c0f';ctx.fillRect(W*.49,H*.16,6,10);
+  const P=2.4,ph=(t%P)/P;const cx=W*.5,cy=H*.66;
+  ctx.fillStyle='#04070b';ctx.fillRect(W*.18,cy,W*.64,H*.34);
+  for(let r=0;r<6;r++){ctx.strokeStyle=`rgba(210,205,190,${.12-r*.015})`;ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(cx,cy,W*(.2+r*.03),H*(.02+r*.006),0,Math.PI,Math.PI*2);ctx.stroke();}
+  const amp=ph>.5?(1-(ph-.5)*2)*14:0;
+  for(let y=cy+4;y<H;y+=6){const w=Math.sin(y*.12+t*5)*amp*(1-(y-cy)/(H-cy));ctx.fillStyle='rgba(227,154,53,.45)';ctx.fillRect(cx-4+w,y,8,4);}
+  ctx.save();ctx.beginPath();ctx.rect(W*.18,cy,W*.64,H*.34);ctx.clip();
+  for(let s=0;s<14;s++){const sy=cy+s*(H*.026);const w=Math.sin(s*.9+t*6)*amp*.8;ctx.save();ctx.beginPath();ctx.rect(0,sy,W,H*.026+1);ctx.clip();ctx.translate(cx+w,cy);ctx.scale(1,-1);fig(0,0,H*.34,.7);ctx.restore();}
+  ctx.restore();
+  if(ph<.5){const dy=H*.17+(cy-H*.17)*Math.pow(ph*2,1.7);ctx.fillStyle='rgba(200,215,225,.8)';ctx.beginPath();ctx.ellipse(cx,dy,2.2,5,0,0,7);ctx.fill();}
+  else{const q=(ph-.5)*2;ctx.strokeStyle=`rgba(227,154,53,${.6*(1-q)})`;ctx.lineWidth=1.5;for(let k=0;k<3;k++){const rq=Math.max(0,q-k*.18);ctx.beginPath();ctx.ellipse(cx,cy+2,W*.18*rq,H*.03*rq,0,0,7);ctx.stroke();}}
+  ctx.fillStyle='rgba(6,8,11,.95)';ctx.beginPath();ctx.arc(cx,cy-H*.2,H*.045,0,7);ctx.fill();rr(cx-H*.12,cy-H*.17,H*.24,H*.19,H*.05);ctx.fill();
+},
+block(t,f){
+  const p=reduce?1:Math.min(1,t/20);const r=Math.round(227+(223-227)*p),g=Math.round(154+(229-154)*p),b=Math.round(53+(234-53)*p);
+  ground('#14181d','#090b0e');
+  glow(W/2,H*.05,H*.9,`rgba(${r},${g},${b},A)`,.16+.14*p);ctx.fillStyle=`rgba(${r},${g},${b},.9)`;ctx.fillRect(W*.3,H*.06,W*.4,4);
+  ctx.fillStyle='#0d1013';ctx.fillRect(0,H*.7,W,H*.3);
+  ctx.fillStyle='#2a2f36';ctx.fillRect(W*.28,H*.6,W*.44,H*.045);ctx.fillStyle='#1e2228';ctx.fillRect(W*.3,H*.645,10,H*.2);ctx.fillRect(W*.7-10,H*.645,10,H*.2);
+  ctx.fillStyle='#5f6369';ctx.fillRect(W*.4,H*.585,W*.05,H*.016);ctx.fillRect(W*.46,H*.585,W*.05,H*.016);
+  glow(W*.62,H*.6,H*.05,BL,.35);ctx.fillStyle=SB;ctx.fillRect(W*.6,H*.59,W*.04,4);
+  ctx.fillStyle='#07090b';ctx.fillRect(W*.8,H*.22,W*.15,H*.5);ctx.strokeStyle='#3a414a';ctx.lineWidth=3;ctx.strokeRect(W*.8,H*.22,W*.15,H*.5);
+  if(f.mara&&!f.maragone){glow(W*.875,H*.5,H*.3,AM,.12);fig(W*.875,H*.72,H*.44,.95);}
+},
+concourse(t,f){
+  ground('#0d1014','#07090b');
+  glow(W/2,H*.5,H*.55,WT,.07);ctx.fillStyle='rgba(223,229,234,.05)';ctx.fillRect(W*.44,0,W*.12,H);
+  const bands=[[.06,11],[.28,10],[.5,10],[.72,10]];let pi=0;
+  bands.forEach((bd,bi)=>{const y=H*bd[0],h=H*.13;ctx.fillStyle='#14181d';ctx.fillRect(0,y+h+4,W,6);
+    for(let i=0;i<bd[1];i++,pi++){const pw=W/bd[1]*.78,x=W*(i/bd[1])+W/bd[1]*.11;
+      let msg=Math.floor((t/4+pi*.37)%11);
+      if(f.p6&&!f.p6off&&pi===5&&Math.floor(t*2)%4===0){ctx.fillStyle='#8f959b';ctx.fillRect(x,y,pw,h);ctx.strokeStyle='#5a6066';ctx.lineWidth=1;for(let k=1;k<5;k++){ctx.beginPath();ctx.moveTo(x,y+h*k/5);ctx.lineTo(x+pw,y+h*k/5);ctx.stroke();}for(let k=1;k<4;k++){ctx.beginPath();ctx.moveTo(x+pw*k/4,y);ctx.lineTo(x+pw*k/4,y+h);ctx.stroke();}ctx.fillStyle='#2b2f34';ctx.fillRect(x+4,y+h-8,pw-8,3);continue;}
+      if(f.p19&&!f.p6off&&pi===18){const g=ctx.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'#0a1620');g.addColorStop(1,'#03060a');ctx.fillStyle=g;ctx.fillRect(x,y,pw,h);ctx.strokeStyle='rgba(120,160,190,.25)';for(let k=0;k<4;k++){ctx.beginPath();ctx.moveTo(x,y+h*(.3+k*.18)+Math.sin(t*1.5+k)*2);ctx.lineTo(x+pw,y+h*(.3+k*.18)+Math.cos(t*1.2+k)*2);ctx.stroke();}ctx.fillStyle='#e8eef2';ctx.fillRect(x+pw*.2,y+h*.47,pw*.6,2.5);continue;}
+      const warm=msg%3!==1;const g=ctx.createLinearGradient(x,y,x+pw,y+h);g.addColorStop(0,warm?'#6b4a1f':'#4a3d2a');g.addColorStop(1,'#1d1712');ctx.fillStyle=g;ctx.fillRect(x,y,pw,h);
+      glow(x+pw*.5,y+h*.5,pw*.5,AM,.12);
+      if(msg%2===0){fig(x+pw*.45,y+h*.95,h*.7,.6);fig(x+pw*.6,y+h*.95,h*.5,.6);}
+      ctx.fillStyle='rgba(240,230,210,.85)';ctx.fillRect(x+pw*.1,y+h*.14,pw*.45,3);ctx.fillRect(x+pw*.1,y+h*.24,pw*.3,3);
+    }});
+  for(let i=0;i<22;i++){const x=((i*73+t*18*(1+hash(i)))%(W+60))-30;fig(x,H*1.02,H*.24*(.9+hash(i)*.2),1);}
+},
+newsroom(t){
+  ground('#0f1216','#07090b');
+  for(let r=0;r<2;r++)for(let c=0;c<4;c++){const x=W*(.06+c*.24),y=H*(.5+r*.2);ctx.fillStyle='#1b2026';ctx.fillRect(x,y,W*.18,H*.05);ctx.fillStyle='#0d1014';ctx.fillRect(x+W*.05,y-H*.09,W*.08,H*.08);glow(x+W*.09,y-H*.05,H*.08,BL,.12);}
+  const sx=W*.38,sy=H*.24,sw=W*.24,sh=H*.2;glow(sx+sw/2,sy+sh/2,H*.3,BL,.35);ctx.fillStyle='#0c1218';ctx.fillRect(sx,sy,sw,sh);ctx.strokeStyle='#3a5b73';ctx.lineWidth=2;ctx.strokeRect(sx,sy,sw,sh);
+  ctx.fillStyle='#233241';ctx.fillRect(sx+4,sy+4,sw-8,sh-8);fig(sx+sw*.45,sy+sh*.95,sh*.8,.9);fig(sx+sw*.62,sy+sh*.95,sh*.45,.9);ctx.fillStyle='#8fc3e6';ctx.fillRect(sx+sw*.6,sy+sh*.6,sw*.06,sh*.1);
+  ctx.fillStyle='#e05a5a';ctx.globalAlpha=.5+.5*Math.sin(t*3);ctx.fillRect(sx+sw-12,sy+6,6,6);ctx.globalAlpha=1;
+  ctx.fillStyle='#22272e';ctx.fillRect(W*.3,H*.62,W*.4,H*.05);fig(W*.5,H*.62,H*.28,1);
+},
+archive(t){
+  const dx=reduce?0:Math.sin(t*38)*.7;ctx.save();ctx.translate(dx,0);
+  ground('#0b0d10','#050607');
+  for(let s=0;s<5;s++){const y=H*(.12+s*.17);ctx.fillStyle='#1b1f25';ctx.fillRect(0,y+H*.11,W,5);for(let x=0;x<W;x+=14){ctx.fillStyle=hash(x+s*7)>.5?'#2a2620':'#33302a';ctx.fillRect(x,y+H*.02+hash(x*3+s)*8,10,H*.09-hash(x*3+s)*8);}}
+  glow(W/2,H*.3,H*.5,AM,.16);
+  const fx=W*.3,fy=H*.36,fw=W*.4,fh=H*.46;ctx.fillStyle='#cdc5b1';ctx.fillRect(fx,fy,fw,fh);ctx.fillStyle='#bdb5a1';ctx.fillRect(fx+fw/2-1,fy,2,fh);
+  ctx.fillStyle='#7d776b';for(let col=0;col<2;col++)for(let k=0;k<11;k++){const w=fw*.4*(.6+hash(k+col*20)*.4);ctx.fillRect(fx+fw*(.06+col*.5),fy+fh*(.16+k*.07),w,2.5);}
+  ctx.fillStyle='#8a8478';ctx.fillRect(fx+fw*.06,fy+fh*.06,fw*.5,4);
+  ctx.fillStyle='#0a0a0b';ctx.fillRect(fx+fw*.56,fy+fh*.05,fw*.36,fh*.05);ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(fx+fw*.58,fy+fh*.06,fw*.3,2);
+  ctx.restore();
+},
+paper(t){
+  ground('#070809','#030404');
+  glow(W/2,H*.3,H*.7,AM,.22+.02*Math.sin(t*2));ctx.fillStyle='#1a1d22';ctx.fillRect(W*.15,H*.72,W*.7,H*.05);
+  ctx.fillStyle='#0d1014';ctx.fillRect(W*.18,H*.77,12,H*.23);ctx.fillRect(W*.82-12,H*.77,12,H*.23);
+  glow(W*.78,H*.72,H*.05,BL,.3);ctx.fillStyle=SB;ctx.fillRect(W*.76,H*.715,W*.04,3);
+}};
+function frame(now){
+  const t=(now-sceneT0)/1000;const fn=scenes[st.scene]||scenes.corridor;
+  ctx.clearRect(0,0,W,H);fn(t,st.sf);
+  ctx.globalAlpha=.5;const pat=ctx.createPattern(grain,'repeat');ctx.fillStyle=pat;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+  if(!reduce)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+function redraw(){if(reduce)requestAnimationFrame(frame);}
+
+/* ---------- UI ---------- */
+const box=$('#box'),who=$('#who'),text=$('#text'),choices=$('#choices'),nextEl=$('#next'),hint=$('#hint'),slab=$('#slab'),tallyEl=$('#tally b'),sheet=$('#sheet');
+let typing=false,typeTimer=0,pending=[];
+function setFeel(){$('#stage').style.setProperty('--feel',Math.min(1,st.feel/14).toFixed(2));}
+function setTally(){tallyEl.textContent=String(st.count).padStart(4,'0');}
+function ping(msg,from){slab.className='on buzz'+(from?' mara':'');slab.querySelector('.from').textContent=from||'Editor';slab.querySelector('.msg').textContent=msg;clearTimeout(slab._t);slab._t=setTimeout(()=>slab.classList.remove('buzz'),500);}
+function tick(){slab.classList.add('tick');setTimeout(()=>slab.classList.remove('tick'),350);}
+
+function typeInto(html,cb){
+  text.innerHTML=html;const spans=[];
+  const walker=document.createTreeWalker(text,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(nd=>{const frag=document.createDocumentFragment();for(const ch of nd.nodeValue){const s=document.createElement('span');s.className='ch';s.textContent=ch;frag.appendChild(s);spans.push(s);}nd.parentNode.replaceChild(frag,nd);});
+  text.querySelectorAll('.plateq,.slabq,.n').forEach(el=>el.classList.add('pending'));
+  const reveal=s=>{s.classList.add('v');const p=s.parentElement;if(p&&p.classList.contains('pending'))p.classList.remove('pending');};
+  if(reduce){spans.forEach(reveal);cb();return;}
+  typing=true;let k=0;const start=performance.now(),rate=0.16;let done=false;
+  const step=now=>{if(done)return;const target=Math.min(spans.length,Math.floor((now-start)*rate));while(k<target)reveal(spans[k++]);if(k<spans.length)typeTimer=requestAnimationFrame(step);else{done=true;typing=false;cb();}};
+  typeTimer=requestAnimationFrame(step);
+  text._finish=()=>{if(done)return;done=true;cancelAnimationFrame(typeTimer);spans.forEach(reveal);typing=false;cb();};
+}
+function bindNumbers(){
+  text.querySelectorAll('.n').forEach((el,k)=>{const key=st.i+':'+k;if(st.tally.some(x=>x.k===key))el.classList.add('got');
+    el.addEventListener('click',e=>{e.stopPropagation();if(el.classList.contains('got'))return;el.classList.add('got');const v=+el.dataset.v;st.count++;st.tally.push({k:key,v,l:el.textContent});setTally();tick();
+      const pop=document.createElement('span');pop.className='pop';pop.textContent='+'+v;el.appendChild(pop);setTimeout(()=>pop.remove(),900);
+      hint.classList.remove('on');st.hint=true;save();});
+  });
+  if(!st.hint&&text.querySelector('.n'))hint.classList.add('on');
+}
+function renderSheet(){
+  const f=st.flags;const shape=[];
+  shape.push(f.hard?'Asked the hard one.':'Didn’t ask.');
+  shape.push(f.concourse?'Concourse, then corridors.':'Corridors.');
+  shape.push(f.recoff?'Recorder off at the water.':'Recorder on at the water.');
+  if(f.almost)shape.push('Almost told Mara.');
+  shape.push(f.waited?'Waited. Nine minutes.':'Walked. Then waited anyway.');
+  shape.push(f.askedline?'Asked Corrin about the line.':'Let Corrin have the mother.');
+  shape.push(f.reached?'Reached for the slab. Put it back.':'Slab stayed in the pocket.');
+  const tal=st.tally.length?`Counted ${st.tally.length}: `+st.tally.map(x=>x.v).join(' · '):'Counted nothing on paper. Counted everything anyway.';
+  sheet.innerHTML=`<p>Intake up 4. Distributions flat. Output “adjusted.” No seasons.</p><p>Panel 6, wrong feed. Panel 19, twelfth message. Each ran once.</p><p>Archive flat 2214-C, page 9. Bar over the byline. Every copy. By hand.</p><p class="shape">${shape.join(' ')}</p><p class="tal">${tal}</p>`;
+}
+
+function show(i){
+  st.i=i;const b=beats[i];
+  if(b.scene&&b.scene!==st.scene){st.scene=b.scene;st.sf={};sceneT0=performance.now();}
+  if(b.resetT)sceneT0=performance.now();
+  if(b.flag)st.sf[b.flag]=true;
+  if(b.where)$('#where').textContent=b.where;
+  redraw();
+  if(b.card){showCard(b.card,()=>show(i+1));save();return;}
+  $('#panel').hidden=false;
+  box.classList.toggle('inner',!!b.inner);
+  who.textContent=b.who||'';who.hidden=!b.who;
+  choices.innerHTML='';nextEl.classList.remove('on');hint.classList.remove('on');
+  if(b.sheet){renderSheet();sheet.classList.add('on');}else sheet.classList.remove('on');
+  if(b.fx==='flicker'&&!reduce){const fl=$('#flash');fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');}
+  if(b.c)st.count+=b.c;if(b.f)st.feel+=b.f;setFeel();setTally();
+  if(b.ping){b.ping.forEach((m,k)=>setTimeout(()=>ping(m),600+k*1600));}
+  if(b.mara)setTimeout(()=>ping(b.mara,'Mara'),700);
+  typeInto(b.t,()=>{
+    if(b.choice){b.choice.forEach((c,k)=>{const btn=document.createElement('button');btn.className='choice'+(c.c?' c':c.f?' f':'');btn.dataset.k=k+1;btn.textContent=c.l;btn.addEventListener('click',e=>{e.stopPropagation();choose(c);});choices.appendChild(btn);});choices.firstChild.focus({preventScroll:true});}
+    else if(b.end){nextEl.textContent='Close the sheet ▸';nextEl.classList.add('on');}
+    else{nextEl.textContent='Next ▸';nextEl.classList.add('on');}
+  });
+  bindNumbers();save();
+}
+function choose(c){if(c.c)st.count+=c.c;if(c.f)st.feel+=c.f;if(c.set)st.flags[c.set]=true;setFeel();setTally();show(idx[c.go]);}
+function advance(){
+  const b=beats[st.i];
+  if(typing){text._finish&&text._finish();return;}
+  if(b.choice)return;
+  if(b.end){showEnd();return;}
+  show(b.next?idx[b.next]:st.i+1);
+}
+box.addEventListener('click',advance);
+box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();advance();}});
+addEventListener('keydown',e=>{
+  if(document.querySelector('.card.on'))return;
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter'){if(document.activeElement===box||document.activeElement===document.body){e.preventDefault();advance();}}
+  const k=parseInt(e.key,10);if(k>=1&&k<=3){const btn=choices.children[k-1];if(btn)btn.click();}
+});
+
+function showCard(c,go){
+  $('#ck').textContent=c.k;$('#ct').innerHTML=c.t+'<i></i>';$('#cs').textContent=c.s;const card=$('#chapter');card.classList.add('on');$('#panel').hidden=true;
+  const btn=$('#cgo');btn.onclick=()=>{card.classList.remove('on');go();};btn.focus();
+}
+function showEnd(){
+  $('#ecount').textContent=String(st.count).padStart(4,'0');$('#efeel').style.width=Math.min(100,st.feel/16*100)+'%';
+  $('#esub').textContent=`You counted ${st.count} figures. The city felt ${st.feel} things through you. Two things that cannot both be everything, being everything at once.`;
+  $('#end').classList.add('on');$('#panel').hidden=true;$('#again').focus();
+}
+$('#again').addEventListener('click',()=>{try{localStorage.removeItem(SAVE);}catch(e){}st={i:0,count:0,feel:0,tally:[],flags:{},scene:'elevator',sf:{},hint:false};$('#end').classList.remove('on');sheet.classList.remove('on');setFeel();setTally();show(0);});
+
+/* ---------- Title ---------- */
+const saved=load();
+if(saved&&saved.i>0&&saved.i<beats.length){$('#cont').hidden=false;}
+$('#begin').addEventListener('click',()=>{try{localStorage.removeItem(SAVE);}catch(e){}$('#title').classList.remove('on');show(0);});
+$('#cont').addEventListener('click',()=>{st=saved;st.sf=st.sf||{};sceneT0=performance.now();setFeel();setTally();$('#title').classList.remove('on');$('#where').textContent='';show(st.i);});
+$('#panel').hidden=true;
+})();
+</script>
